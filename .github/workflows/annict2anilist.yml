@@ -1,0 +1,66 @@
+name: Annict2Anilist
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5,17 * * *"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+
+      - name: Get secrets
+        env:
+          ANNICT_CLIENT_ID: ${{ secrets.ANNICT_CLIENT_ID }}
+          ANNICT_CLIENT_SECRET: ${{ secrets.ANNICT_CLIENT_SECRET }}
+          ANILIST_CLIENT_ID: ${{ secrets.ANILIST_CLIENT_ID }}
+          ANILIST_CLIENT_SECRET: ${{ secrets.ANILIST_CLIENT_SECRET }}
+        run: |
+          echo "ANNICT_CLIENT_ID=${ANNICT_CLIENT_ID}" >> .env
+          echo "ANNICT_CLIENT_SECRET=${ANNICT_CLIENT_SECRET}" >> .env
+          echo "ANILIST_CLIENT_ID=${ANILIST_CLIENT_ID}" >> .env
+          echo "ANILIST_CLIENT_SECRET=${ANILIST_CLIENT_SECRET}" >> .env
+          cp -f .env annict2anilist/.env
+
+      - name: Create `token-anilist.json`
+        env:
+          ANILIST_ACCESS_TOKEN: ${{ secrets.ANILIST_ACCESS_TOKEN }}
+          ANILIST_REFRESH_TOKEN: ${{ secrets.ANILIST_REFRESH_TOKEN }}
+        run: |
+          cat <<EOF > annict2anilist/token-anilist.json
+          {
+            "access_token": "$ANILIST_ACCESS_TOKEN",
+            "token_type": "Bearer",
+            "refresh_token": "$ANILIST_REFRESH_TOKEN",
+            "expiry": "2024-09-02T11:07:09.529012+09:00"
+          }
+          EOF
+
+      - name: Create `token-annict.json`
+        env:
+          ANNICT_ACCESS_TOKEN: ${{ secrets.ANNICT_ACCESS_TOKEN }}
+        run: |
+          cat <<EOF > annict2anilist/token-annict.json
+          {
+            "access_token": "$ANNICT_ACCESS_TOKEN",
+            "token_type": "Bearer",
+            "expiry": "0001-01-01T00:00:00Z"
+          }
+          EOF
+
+      - name: Build and Run
+        run: |
+          cd annict2anilist
+          make build
+          make run
