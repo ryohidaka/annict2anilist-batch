@@ -1,0 +1,3 @@
+[submodule "annict2anilist"]
+	path = annict2anilist
+	url = git@github.com:SlashNephy/annict2anilist.git
