@@ -62,5 +62,5 @@ jobs:
       - name: Build and Run
         run: |
           cd annict2anilist
-          make build
-          make run
+          make build-batch
+          make run-batch
